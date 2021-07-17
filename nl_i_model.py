@@ -10,43 +10,44 @@ def i_var_format(arg_par, i_lem, parenthesis="("):
 def i_concat_children(token, i_lem):
     conjs = []
     child_deps = [child.dep_ for child in token.children]
-    nonpobj_params = ["relcl", "det", "nummod", "amod", "prep"]
-    dep_i_param_dict = {
+    nonpobj_vars = ["det", "nummod", "amod", "prep"]
+    dep_i_var_dict = {
         "prep": ["pobj"],
-        "pobj": ["det", "nummod", "amod"],
-        "nsubj": nonpobj_params,
-        "nsubjpass": nonpobj_params,
-        "dobj": nonpobj_params,
+        "pobj": ["det", "nummod", "amod", "prep"],
+        "nsubj": nonpobj_vars,
+        "nsubjpass": nonpobj_vars,
+        "dobj": nonpobj_vars,
         "ccomp": ["aux", "auxpass", "advmod", "prep", "nsubj", "nsubjpass", "dobj"],
         "amod": ["advmod"],
         "acomp": ["advmod"],
-        "relcl": ["aux", "auxpass", "advmod", "ccomp", "acomp", "prep", "nsubj", "nsubjpass", "dobj"]
+        "relcl": ["aux", "auxpass", "advmod", "ccomp", "acomp", "prep", "nsubj", "nsubjpass", "dobj"],
+        "aux": ["neg", "acomp"]
     }
-    il_params = [key for key in dep_i_param_dict]
-    non_params = ["aux", "punct", "compound", "mark", "conj", "cc"]
+    il_vars = [key for key in dep_i_var_dict]
+    non_vars = ["aux", "punct", "compound", "mark", "conj", "cc"]
     root_verb = token.dep_ == "ROOT" and token.pos_ == "VERB"
-    dep_in_params = token.dep_ in il_params
-    if root_verb or dep_in_params:
+    dep_in_vars = token.dep_ in il_vars
+    if root_verb or dep_in_vars:
         if root_verb:
-            dep_i_params = ["aux", "auxpass", "advmod", "ccomp", "acomp", "prep", "nsubj", "nsubjpass", "dobj"]
+            dep_i_vars = ["aux", "auxpass", "advmod", "ccomp", "acomp", "prep", "nsubj", "nsubjpass", "dobj"]
         else:
-            dep_i_params = dep_i_param_dict[token.dep_]
-        expected_params = dep_i_params + non_params
-        for idx, param in enumerate(dep_i_params):
+            dep_i_vars = dep_i_var_dict[token.dep_]
+        expected_vars = dep_i_vars + non_vars
+        for idx, i_var in enumerate(dep_i_vars):
             for child in token.children:
-                if child.dep_ not in expected_params:
+                if child.dep_ not in expected_vars:
                     print("New token type:", child.text, child.dep_)
-                if child.dep_ == param:
+                if child.dep_ == i_var:
                     if idx != 0:
                         i_lem = i_lem + ", "
                     i_lem = doc_i_lemma(child, i_lem)
-            if param not in child_deps:
+            if i_var not in child_deps:
                 if idx == 0:
                     i_lem = i_lem + "None" 
                 else:
                     i_lem = i_lem + ", None"
                 
-    elif token.dep_ not in non_params:
+    elif token.dep_ not in non_vars:
         print("New token type:", token.text, token.pos_, token.dep_)
 
     for idx, child in enumerate(token.children):
@@ -64,29 +65,36 @@ def doc_i_lemma(token, i_lem):
             "NOUN": "compound",
             "NUM": "compound"
         }
-        func_name = token.text
+        pred_name = token.text
         for child in token.children:
             if child.dep_ == word_concat_map[token.pos_]:
-                func_name = f"{child.text}_{func_name}"
-        func_name = f"{func_name}_{token.pos_}"
+                pred_name = f"{child.text}_{pred_name}"
+        pred_name = f"{pred_name}_{token.pos_}"
         if token.dep_ in ["nummod"]:
-            i_lem = i_var_format(func_name, i_lem, "")
+            i_lem = i_var_format(pred_name, i_lem, "")
         else:
-            i_lem = i_var_format(func_name, i_lem)      
+            i_lem = i_var_format(pred_name, i_lem)      
             i_lem = i_concat_children(token, i_lem)
     elif token.dep_ not in ["nummod"]:
-        func_name = f"{token.text}_{token.pos_}"
-        i_lem = i_var_format(func_name, i_lem)
+        pred_name = f"{token.text}_{token.pos_}"
+        i_lem = i_var_format(pred_name, i_lem)
         i_lem = i_concat_children(token, i_lem)
     return i_lem
 
 nlp = spacy.load('en_core_web_trf')
-doc = nlp("A careful examination of the patterns of these reports has already shown that they follow definite laws for which no explanation has been found.")
+doc = nlp("These statistical facts have been adequately documented elsewhere and will not concern us here.")
 
 full_span = doc[0:]
-i_lem = ""
 fs_root = full_span.root
+i_lem = ""
 i_lem = doc_i_lemma(fs_root, i_lem)
-print(i_lem)        
+for token in fs_root.children:
+    if token.dep_ == "cc":
+        ands = ("and", "but", "yet", "as")
+        ors = ("or")
+        cc_mapping = {
+            ands: "\<and>",
+            ors: "\<or>"
+        }
 
     
