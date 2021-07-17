@@ -1,5 +1,7 @@
 import re
 
+import spacy
+
 def i_var_format(arg_par, i_lem, parenthesis="("):
     arg_par = re.sub("\.|,|-", "_", arg_par)
     i_lem = i_lem + arg_par.lower() + parenthesis
@@ -67,4 +69,13 @@ def doc_i_lemma(token, i_lem):
         pred_name = f"{token.text}_{token.pos_}"
         i_lem = i_var_format(pred_name, i_lem)
         i_lem = i_concat_children(token, i_lem)
+    return i_lem
+
+def str_i_lemma(text):
+    nlp = spacy.load('en_core_web_trf')
+    doc = nlp(text)
+    full_span = doc[0:]
+    fs_root = full_span.root
+    i_lem = ""
+    i_lem = doc_i_lemma(fs_root, i_lem)
     return i_lem
