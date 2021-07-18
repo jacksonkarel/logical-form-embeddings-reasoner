@@ -9,16 +9,18 @@ def i_var_format(arg_par, i_lem, parenthesis="("):
 
 def i_concat_children(token, i_lem):
     child_deps = [child.dep_ for child in token.children]
-    noun_deps = ["det", "nummod", "amod", "nmod", "advmod", "poss", "appos", "prep", "acl", "relcl", "cc", "conj"]
+    noun_deps = ["det", "nummod", "amod", "nmod", "advmod", "poss", "case", "appos", "prep", "acl", "relcl", "cc", "conj"]
     dep_i_var_dict = {
         "ADP": ["pobj", "cc", "conj"],
         "NOUN": noun_deps,
         "PRON": noun_deps,
-        "VERB": ["neg", "aux", "auxpass", "advmod", "npadvmod", "ccomp", "acomp", "xcomp", "prep", "mark", "nsubj", "nsubjpass", "dobj", "pobj", "agent", "advcl", "cc", "conj"],
+        "PROPN": noun_deps,
+        "VERB": ["neg", "aux", "auxpass", "advmod", "npadvmod", "ccomp", "acomp", "xcomp", "prep", "mark", "nsubj", "nsubjpass", "dobj", "pobj", "csubj", "agent", "advcl", "cc", "conj"],
         "ADJ": ["advmod", "amod", "cc", "conj"],
         "ADV": ["advmod", "prep"],
-        "AUX": ["neg", "acomp", "xcomp", "attr", "nsubj"],
-        "DET": ["prep", "pobj"]
+        "AUX": ["neg", "acomp", "xcomp", "attr", "nsubj", "csubj", "prep", "intj"],
+        "DET": ["prep", "pobj", "relcl"],
+        "INTJ": ["npadvmod"]
     }
     il_vars = [key for key in dep_i_var_dict]
     non_vars = ["punct", "compound"]
@@ -33,7 +35,7 @@ def i_concat_children(token, i_lem):
                 if child.dep_ == i_var:
                     if idx != 0:
                         i_lem = i_lem + ", "
-                    i_lem = doc_i_lemma(child, i_lem)
+                    i_lem = token_i_lemma(child, i_lem)
             if i_var not in child_deps:
                 if idx == 0:
                     i_lem = i_lem + "None" 
@@ -46,7 +48,7 @@ def i_concat_children(token, i_lem):
     i_lem = i_lem + ")"
     return i_lem
 
-def doc_i_lemma(token, i_lem):
+def token_i_lemma(token, i_lem):
     if token.n_rights + token.n_lefts == 0:
         arg_name = f"{token.text}_{token.pos_}"
         i_lem = i_var_format(arg_name, i_lem, "")
@@ -71,11 +73,18 @@ def doc_i_lemma(token, i_lem):
         i_lem = i_concat_children(token, i_lem)
     return i_lem
 
-def str_i_lemma(text):
+def ecw_trf_doc(text):
     nlp = spacy.load('en_core_web_trf')
     doc = nlp(text)
+    return doc
+
+def doc_i_lemma(doc):
     full_span = doc[0:]
     fs_root = full_span.root
     i_lem = ""
-    i_lem = doc_i_lemma(fs_root, i_lem)
+    i_lem = token_i_lemma(fs_root, i_lem)
     return i_lem
+
+def str_i_lemma(text):
+    doc = ecw_trf_doc(text)
+    i_lem = doc_i_lemma(doc)
