@@ -7,43 +7,36 @@ def i_var_format(arg_par, i_lem, parenthesis="("):
     i_lem = i_lem + arg_par.lower() + parenthesis
     return i_lem
 
+def check_none(idx, i_lem):
+    if idx == 0:
+        i_lem = i_lem + "None" 
+    else:
+        i_lem = i_lem + ", None"
+    return i_lem
+
 def i_concat_children(token, i_lem):
     child_deps = [child.dep_ for child in token.children]
-    noun_deps = ["det", "nummod", "amod", "nmod", "advmod", "poss", "case", "appos", "prep", "acl", "relcl", "cc", "conj"]
-    dep_i_var_dict = {
-        "ADP": ["pobj", "cc", "conj"],
-        "NOUN": noun_deps,
-        "PRON": noun_deps,
-        "PROPN": noun_deps,
-        "VERB": ["neg", "aux", "auxpass", "advmod", "npadvmod", "ccomp", "acomp", "xcomp", "prep", "mark", "nsubj", "nsubjpass", "dobj", "pobj", "csubj", "agent", "advcl", "cc", "conj"],
-        "ADJ": ["advmod", "amod", "cc", "conj"],
-        "ADV": ["advmod", "prep"],
-        "AUX": ["neg", "acomp", "xcomp", "attr", "nsubj", "csubj", "prep", "intj"],
-        "DET": ["prep", "pobj", "relcl"],
-        "INTJ": ["npadvmod"]
-    }
-    il_vars = [key for key in dep_i_var_dict]
-    non_vars = ["punct", "compound"]
-    dep_in_vars = token.pos_ in il_vars
-    if dep_in_vars:
-        dep_i_vars = dep_i_var_dict[token.pos_]
-        expected_vars = dep_i_vars + non_vars
+    
+    dep_i_vars = ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
+    "ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
+    "neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
+    "predet", "prep", "prt", "punct", "quantmod", "relcl", "xcomp"]
+    
+    il_vars = ["ADJ", "ADP", "ADV", "AUX", "CONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN", "PUNCT", 
+    "SCONJ", "SYM", "VERB"]
+
+    if token.pos_ in il_vars:
         for idx, i_var in enumerate(dep_i_vars):
-            for child in token.children:
-                if child.dep_ not in expected_vars:
-                    print("New token type:", child.text, child.dep_)
-                if child.dep_ == i_var:
-                    if idx != 0:
-                        i_lem = i_lem + ", "
-                    i_lem = token_i_lemma(child, i_lem)
             if i_var not in child_deps:
-                if idx == 0:
-                    i_lem = i_lem + "None" 
-                else:
-                    i_lem = i_lem + ", None"
-                
-    elif token.dep_ not in non_vars:
-        print("New token type:", token.text, token.pos_, token.dep_)
+                i_lem = check_none(idx, i_lem)
+            for child in token.children:
+                if child.dep_ == i_var:
+                    if child.dep_ == "punct" and child.text in [".", ",", ":", "!", ";"]:
+                        i_lem = check_none(idx, i_lem)
+                    else: 
+                        if idx != 0:
+                            i_lem = i_lem + ", "
+                        i_lem = token_i_lemma(child, i_lem)
 
     i_lem = i_lem + ")"
     return i_lem
