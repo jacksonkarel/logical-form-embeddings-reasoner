@@ -7,11 +7,12 @@ def i_var_format(arg_par, i_lem, parenthesis="("):
     i_lem = i_lem + arg_par.lower() + parenthesis
     return i_lem
 
-def check_none(idx, i_lem):
+def check_none(idx, t, i_lem):
+    one_plus_idx = idx + 1
     if idx == 0:
-        i_lem = i_lem + "None" 
+        i_lem = f"{i_lem}, {t.text}_p{one_plus_idx}"
     else:
-        i_lem = i_lem + ", None"
+        i_lem = f"{i_lem}, {t.text}_p{one_plus_idx}"
     return i_lem
 
 def i_concat_children(token, i_lem):
@@ -28,11 +29,11 @@ def i_concat_children(token, i_lem):
     if token.pos_ in il_vars:
         for idx, i_var in enumerate(dep_i_vars):
             if i_var not in child_deps:
-                i_lem = check_none(idx, i_lem)
+                i_lem = check_none(idx, token, i_lem)
             for child in token.children:
                 if child.dep_ == i_var:
                     if child.dep_ == "punct" and child.text in [".", ",", ":", "!", ";"]:
-                        i_lem = check_none(idx, i_lem)
+                        i_lem = check_none(idx, child, i_lem)
                     else: 
                         if idx != 0:
                             i_lem = i_lem + ", "
