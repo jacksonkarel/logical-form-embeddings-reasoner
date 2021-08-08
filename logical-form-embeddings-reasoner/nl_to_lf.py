@@ -50,10 +50,12 @@ def i_concat_children(token, i_data):
 
 def token_i_lemma(token, i_data):
     if token.n_rights + token.n_lefts == 0:
-        arg_name = f"{token.text}_{token.pos_}"
-        i_data = i_var_format(arg_name, i_data, "")
-        # if 0 < i_data["child level"] >= 3:
-
+        pred_name = f"{token.text}_{token.pos_}"
+        i_data = i_var_format(pred_name, i_data, "")
+        child_level = i_data["child level"]
+        if 0 < child_level >= 3:
+            i_data["higher pred idx"][child_level] = len(i_data["lemma"]) - 1
+            
     elif token.pos_ in ["NOUN", "NUM"]:
         word_concat_map = {
             "NOUN": "compound",
@@ -87,7 +89,7 @@ def doc_i_lemma(doc):
         "lemma": "",
         "epvc": 0,
         "child level": 0,
-        "higher pred idx": 0,
+        "higher pred idx": [0, 0, 0],
         "dep vars": ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
     "ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
     "neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
