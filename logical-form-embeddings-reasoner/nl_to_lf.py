@@ -52,9 +52,6 @@ def token_i_lemma(token, i_data):
     if token.n_rights + token.n_lefts == 0:
         pred_name = f"{token.text}_{token.pos_}"
         i_data = i_var_format(pred_name, i_data, "")
-        child_level = i_data["child level"]
-        if 0 < child_level >= 3:
-            i_data["higher pred idx"][child_level] = len(i_data["lemma"]) - 1
             
     elif token.pos_ in ["NOUN", "NUM"]:
         word_concat_map = {
@@ -82,20 +79,88 @@ def ecw_trf_doc(text):
     doc = nlp(text)
     return doc
 
-def doc_i_lemma(doc):
-    full_span = doc[0:]
-    fs_root = full_span.root
+def doc_i_lemma(doc):   
+    
+    # class root_node():
+    #     def __init__(self):
+    #         self.children = []
+    
+    # def ancestors_are_parents(node, parent):
+    #     if parent != start:
+    #         parent.children.append(node)
+    #         ancestors_are_parents(node, parent.parent)
+            
+
+    # class i_var():
+    #     def __init__(self, name, parent):
+    #         self.name = name
+    #         self.children = [] 
+    #         ancestors_are_parents(self, parent)
+    
+    # def i_graph(parent, dep_i_vars, counter):
+    #     if counter <= 3:
+    #         for dep in tqdm(dep_i_vars):
+    #             dep_node = i_var(dep, parent)
+    #             i_graph(dep_node, dep_i_vars, counter)
+    #             counter = counter + 1
+    
+    # start = root_node()
+    # counter = 0
+    # i_graph(start, dep_i_vars, counter)
+    # print(start.children)
+    lvl_counter = 0
     i_data = {
-        "lemma": "",
-        "epvc": 0,
-        "child level": 0,
-        "higher pred idx": [0, 0, 0],
+        "lemma": {"root node": {"children": []}},
         "dep vars": ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
     "ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
     "neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
     "predet", "prep", "prt", "punct", "quantmod", "relcl", "xcomp"]
     }
-    i_data = token_i_lemma(fs_root, i_data)
+    var_counter = {}
+    for var in i_data["dep vars"]:
+        var_counter[var] = 0
+    i_data = i_graph(i_data, lvl_counter, var_counter, "root node")
+    full_span = doc[0:]
+    fs_root = full_span.root
+    t_chldrn_noth = [fs_root]
+    var_root_children = i_data["lemma"]["root node"]["children"]
+    i_data = token_i_dict(t_chldrn_noth, var_root_children, i_data)
+    print(i_data)
+
+def token_i_dict(t_children, var_children, i_data):
+    for token in t_children:
+        for var in var_children:
+            if i_data["lemma"][var]["dep"] == token.dep_:
+                i_data["lemma"][var]["name"] = f"{token.text}_{token.pos_}"
+                if token.n_rights + token.n_lefts > 0:
+                    i_data = token_i_dict(token.children, i_data["lemma"][var]["children"], i_data)
+    return i_data
+
+
+
+    
+
+    # i_data = token_i_lemma(fs_root, i_data)
+    # return i_data
+
+def i_graph(i_data, lvl_counter, var_counter, parent):
+    for dep in i_data["dep vars"]:
+        key = f"{dep}_{var_counter[dep]}"
+        var_counter[dep] = var_counter[dep] + 1
+        i_data["lemma"][key] = {
+            "name": key,
+            "dep": dep,
+            "parents": [parent]
+        }
+        if lvl_counter >= 1:
+            for grand_parent in i_data["lemma"][parent]["parents"]:
+                i_data["lemma"][key]["parents"].append(grand_parent)
+        if lvl_counter <= 2:
+            i_data["lemma"][parent]["children"].append(key)
+        if lvl_counter <= 1:
+            i_data["lemma"][key]["children"] = []
+            next_lvl_counter = lvl_counter + 1
+            i_data = i_graph(i_data, next_lvl_counter, var_counter, key)
     return i_data
 
 def str_i_lemma(text):
