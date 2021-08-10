@@ -110,7 +110,13 @@ def doc_i_lemma(doc):
     # print(start.children)
     lvl_counter = 0
     i_data = {
-        "lemma": {"root node": {"children": []}},
+        "lemma": {
+            "root node": {
+                "dep": "ROOT",
+                "children": [],
+                "grand children": []
+            }
+        },
         "dep vars": ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
     "ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
     "neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
@@ -122,10 +128,11 @@ def doc_i_lemma(doc):
     i_data = i_graph(i_data, lvl_counter, var_counter, "root node")
     full_span = doc[0:]
     fs_root = full_span.root
-    t_chldrn_noth = [fs_root]
+    i_data["lemma"]["root node"]["name"] = f"{fs_root.text}_{fs_root.pos_}".lower()
+    t_root_children = fs_root.children
     var_root_children = i_data["lemma"]["root node"]["children"]
-    i_data = token_i_dict(t_chldrn_noth, var_root_children, i_data)
-    print(i_data)
+    i_data = token_i_dict(t_root_children, var_root_children, i_data)
+    print(i_data["lemma"])
 
 def token_i_dict(t_children, var_children, i_data):
     for token in t_children:
@@ -155,10 +162,13 @@ def i_graph(i_data, lvl_counter, var_counter, parent):
         if lvl_counter >= 1:
             for grand_parent in i_data["lemma"][parent]["parents"]:
                 i_data["lemma"][key]["parents"].append(grand_parent)
+                i_data["lemma"][grand_parent]["grand children"].append(key)
         if lvl_counter <= 2:
             i_data["lemma"][parent]["children"].append(key)
+            i_data["lemma"][parent]["grand children"].append(key)
         if lvl_counter <= 1:
             i_data["lemma"][key]["children"] = []
+            i_data["lemma"][key]["grand children"] = []
             next_lvl_counter = lvl_counter + 1
             i_data = i_graph(i_data, next_lvl_counter, var_counter, key)
     return i_data
