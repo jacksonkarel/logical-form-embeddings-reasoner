@@ -120,27 +120,37 @@ def doc_i_lemma(doc):
         "dep vars": ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
     "ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
     "neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
-    "predet", "prep", "prt", "punct", "quantmod", "relcl", "xcomp"]
+    "predet", "prep", "prt", "punct", "quantmod", "relcl", "xcomp"],
+        "var counter": {}
     }
-    var_counter = {}
     for var in i_data["dep vars"]:
-        var_counter[var] = 0
-    i_data = i_graph(i_data, lvl_counter, var_counter, "root node")
+        i_data["var counter"][var] = 0
+    i_data = i_graph(i_data, "root node")
     full_span = doc[0:]
     fs_root = full_span.root
-    i_data["lemma"]["root node"]["name"] = f"{fs_root.text}_{fs_root.pos_}".lower()
+    i_data["lemma"]["root node"]["name"] = f"{fs_root.text}_{fs_root.pos_}"
     t_root_children = fs_root.children
     var_root_children = i_data["lemma"]["root node"]["children"]
-    i_data = token_i_dict(t_root_children, var_root_children, i_data)
-    print(i_data["lemma"])
+    i_data = token_i_dict(t_root_children, var_root_children, i_data, lvl_counter, None)
 
-def token_i_dict(t_children, var_children, i_data):
+def token_i_dict(t_children, var_children, i_data, lvl_counter, parent):
     for token in t_children:
         for var in var_children:
-            if i_data["lemma"][var]["dep"] == token.dep_:
-                i_data["lemma"][var]["name"] = f"{token.text}_{token.pos_}"
+            if lvl_counter >= 2:
+                i_data = i_graph(i_data, lvl_counter, parent)
+            if i_data["lemma"][var]["dep"] == token.dep_ and not (token.dep_ == "punct" and token.text in [".", ",", ":", "!", ";"]):
+                pred_name = f"{token.text}_{token.pos_}"
+                if token.pos_ in ["NOUN", "NUM", "PROPN"]:
+                    pred_name = token.text
+                    for child in token.children:
+                        if child.dep_ == "compound":
+                            pred_name = f"{child.text}_{pred_name}"
+                    pred_name = f"{pred_name}_{token.pos_}"
+                i_data["lemma"][var]["name"] = pred_name
                 if token.n_rights + token.n_lefts > 0:
-                    i_data = token_i_dict(token.children, i_data["lemma"][var]["children"], i_data)
+                    next_lvl_counter = lvl_counter + 1
+                    i_data = token_i_dict(token.children, i_data["lemma"][var]["children"], i_data, next_lvl_counter, var)
+                
     return i_data
 
 
@@ -150,27 +160,26 @@ def token_i_dict(t_children, var_children, i_data):
     # i_data = token_i_lemma(fs_root, i_data)
     # return i_data
 
-def i_graph(i_data, lvl_counter, var_counter, parent):
+def i_graph(i_data, lvl_counter, parent):
     for dep in i_data["dep vars"]:
-        key = f"{dep}_{var_counter[dep]}"
-        var_counter[dep] = var_counter[dep] + 1
+        key = f"{dep}_{i_data['var counter'][dep]}"
+        i_data["var counter"][dep] = i_data["var counter"][dep] + 1
         i_data["lemma"][key] = {
             "name": key,
             "dep": dep,
             "parents": [parent]
         }
+        i_data["lemma"][parent]["children"].append(key)
+        i_data["lemma"][parent]["grand children"].append(key)
         if lvl_counter >= 1:
             for grand_parent in i_data["lemma"][parent]["parents"]:
                 i_data["lemma"][key]["parents"].append(grand_parent)
                 i_data["lemma"][grand_parent]["grand children"].append(key)
-        if lvl_counter <= 2:
-            i_data["lemma"][parent]["children"].append(key)
-            i_data["lemma"][parent]["grand children"].append(key)
         if lvl_counter <= 1:
             i_data["lemma"][key]["children"] = []
             i_data["lemma"][key]["grand children"] = []
             next_lvl_counter = lvl_counter + 1
-            i_data = i_graph(i_data, next_lvl_counter, var_counter, key)
+            i_data = i_graph(i_data, next_lvl_counter, key)
     return i_data
 
 def str_i_lemma(text):
