@@ -1,11 +1,6 @@
 import spacy
 from spacy import displacy
 
-def ecw_trf_doc(text):
-    nlp = spacy.load('en_core_web_trf')
-    doc = nlp(text)
-    return doc
-
 class Proposition:
     def __init__(self):
         self.data = {
@@ -22,17 +17,22 @@ class Proposition:
         self.var_counter = {}
         self.logical_form = ""
     
+    def ecw_trf_doc(text):
+        nlp = spacy.load('en_core_web_trf')
+        doc = nlp(text)
+        return doc
+
     def str_i_lemma(self, text):
-        doc = ecw_trf_doc(text)
-        self.doc_i_lemma(doc)
+        doc = self.ecw_trf_doc(text)
+        self.doc_to_data(doc)
         self.data_to_lf(self.data["root node"])
 
-    def test(self):
+    def print_lf(self):
         for var in self.dep_vars:
             self.var_counter[var] = 0
         text = input("Enter your text: ")
-        doc = ecw_trf_doc(text)
-        self.doc_i_lemma(doc)
+        doc = self.ecw_trf_doc(text)
+        self.doc_to_data(doc)
         self.data_to_lf(self.data["root node"])
         print(self.logical_form)
         # displacy.serve(doc, style="dep")
@@ -50,7 +50,7 @@ class Proposition:
                     self.logical_form = "".join((self.logical_form, ", "))
             self.logical_form = "".join((self.logical_form, ")"))
             
-    def doc_i_lemma(self, doc):   
+    def doc_to_data(self, doc):   
         lvl_counter = 0
         self.i_graph(lvl_counter, "root node")
         full_span = doc[0:]
