@@ -1,6 +1,6 @@
-section \<open>Scratch\<close>
+section \<open>Test\<close>
 
-theory Scratch2
+theory Test
   imports Main
 begin
 
@@ -13,5 +13,7 @@ change_noun(hello)
 
 
 end
+
+  
 
   
