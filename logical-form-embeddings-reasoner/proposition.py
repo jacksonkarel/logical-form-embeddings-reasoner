@@ -1,5 +1,6 @@
 import spacy
 from spacy import displacy
+from tqdm import tqdm
 
 class Proposition:
     def __init__(self):
@@ -17,7 +18,7 @@ class Proposition:
         self.var_counter = {}
         self.logical_form = ""
     
-    def ecw_trf_doc(text):
+    def ecw_trf_doc(self, text):
         nlp = spacy.load('en_core_web_trf')
         doc = nlp(text)
         return doc
@@ -41,7 +42,7 @@ class Proposition:
         self.logical_form = "".join((self.logical_form, node["name"]))
         if len(node["grand children"]) > 0:
             self.logical_form = "".join((self.logical_form, "("))
-            for idx, grand_child in enumerate(node["grand children"]):
+            for idx, grand_child in enumerate(tqdm(node["grand children"])):
                 if grand_child in node["children"]:
                     self.data_to_lf(self.data[grand_child])
                 else:
