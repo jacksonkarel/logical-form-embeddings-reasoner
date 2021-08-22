@@ -1,0 +1,3 @@
+session Test = HOL + 
+theories
+  Size_Test
