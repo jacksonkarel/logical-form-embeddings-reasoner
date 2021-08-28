@@ -74,7 +74,7 @@ def i_graph(lvl_counter, parent):
 def add_edges(dep, key, parent):
     var_counter[dep] = var_counter[dep] + 1
     data[key] = {
-        "name": key,
+        "name": "None",
         "dep": dep,
         "parents": [parent]
     }
