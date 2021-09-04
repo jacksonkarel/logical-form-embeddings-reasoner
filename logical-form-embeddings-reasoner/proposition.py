@@ -44,8 +44,9 @@ def str_i_lemma():
             data[node_key]["children"].append(key)
 
     data_to_lf(data["root node"])
-    thy_end = '"\n  by auto\n\n\nend'
-    append_i_file(thy_end)
+    # thy_end = '"\n  by auto\n\n\nend'
+    i_and = " \<and> "
+    append_i_file(i_and)
 
 def data_to_lf(node):
     append_i_file(node["name"])
@@ -62,13 +63,6 @@ def data_to_lf(node):
                 append_i_file(data[child]["name"])
                 if idx + 1 < len(node["children"]):
                     append_i_file(", ")
-    
-
-def data_to_lf_iterate(children):
-    for idx, child in enumerate(children):
-        data_to_lf(data[child])
-        if idx + 1 < len(children):
-            append_i_file(", ")
 
 def append_i_file(thy_part):
     i_file = open("../theories/Size_Test2.thy", "a")  
