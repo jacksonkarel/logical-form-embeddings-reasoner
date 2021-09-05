@@ -1,5 +1,7 @@
 import spacy
 
+from dep_vars import dep_vars
+
 def ecw_trf_doc(text):
     nlp = spacy.load('en_core_web_trf')
     doc = nlp(text)
@@ -67,11 +69,6 @@ def data_to_lf(node):
 def append_i_file(thy_part):
     i_file = open("../theories/Size_Test2.thy", "a")  
     i_file.write(thy_part)
-
-dep_vars = ["acl", "acomp", "advcl", "advmod", "agent", "amod", "appos", "attr", "aux", "auxpass", "case", "cc", 
-"ccomp", "conj", "csubj", "csubjpass", "dative", "dep", "det", "dobj", "expl", "intj", "mark", "meta", 
-"neg", "nmod", "npadvmod", "nsubj", "nsubjpass", "nummod", "oprd", "parataxis", "pcomp", "pobj", "poss", "preconj", 
-"predet", "prep", "prt", "punct", "quantmod", "relcl", "xcomp"]
 
 data = {
         "root node": {
