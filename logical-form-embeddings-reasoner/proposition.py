@@ -59,12 +59,6 @@ def data_to_lf(node):
             if idx + 1 < len(node["children"]):
                 append_i_file(", ")
         append_i_file(")")
-        if node != data["root node"]:
-            append_i_file(", ")
-            for idx, child in enumerate(node["children"]):
-                append_i_file(data[child]["name"])
-                if idx + 1 < len(node["children"]):
-                    append_i_file(", ")
 
 def append_i_file(thy_part):
     i_file = open("../theories/Size_Test2.thy", "a")  
