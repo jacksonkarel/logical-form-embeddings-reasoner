@@ -24,13 +24,6 @@ def str_i_lemma():
             for child in token.children:
                 if dep == child.dep_ and not (child.dep_ == "punct" and child.text in [".", ",", ":", "!", ";"]):
                     pred_name = f"{child.text}_{child.pos_}"
-                    if child.pos_ in ["NOUN", "NUM", "PROPN"]:
-                        pred_name = child.text
-                        for grand_child in child.children:
-                            if grand_child.dep_ == "compound":
-                                pred_name = f"{grand_child.text}_{pred_name}"
-                        pred_name = f"{pred_name}_{child.pos_}"
-
                     data[key] = {
                         "name": pred_name.lower()
                     }
